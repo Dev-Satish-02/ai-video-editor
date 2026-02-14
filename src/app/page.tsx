@@ -8,7 +8,6 @@ export default function Home() {
       <h1 className="text-4xl font-bold">AI Video Editor</h1>
 
       <WebGPUTest />
-
       <WebGPUCanvas />
 
       <Button disabled>Video Processing (Coming Soon)</Button>

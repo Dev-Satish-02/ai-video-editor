@@ -7,7 +7,6 @@ export type WebGPUState =
     }
 
 export async function initWebGPU(): Promise<WebGPUState> {
-  // 1. Check browser support
   if (typeof navigator === "undefined" || !("gpu" in navigator)) {
     return {
       supported: false,
@@ -15,7 +14,6 @@ export async function initWebGPU(): Promise<WebGPUState> {
     }
   }
 
-  // 2. Request adapter
   const adapter = await navigator.gpu.requestAdapter({
     powerPreference: "high-performance",
   })
@@ -27,10 +25,8 @@ export async function initWebGPU(): Promise<WebGPUState> {
     }
   }
 
-  // 3. Request device
   const device = await adapter.requestDevice()
 
-  // 4. Handle device loss (mandatory for WebGPU)
   device.lost.then((info) => {
     console.error("WebGPU device lost:", info)
   })
