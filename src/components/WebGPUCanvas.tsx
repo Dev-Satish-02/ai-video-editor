@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import { initWebGPU } from "@/lib/webgpu/init"
 import { createVideoTexture } from "@/lib/webgpu/video"
 import { fullscreenQuadWGSL } from "@/lib/webgpu/shaders"
@@ -9,6 +9,10 @@ export function WebGPUCanvas() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const videoRef = useRef<HTMLVideoElement | null>(null)
 
+  const [brightness, setBrightness] = useState(0.0)
+  const [contrast, setContrast] = useState(1.0)
+  const [grayscale, setGrayscale] = useState(0.0)
+
   useEffect(() => {
     let device: GPUDevice
     let context: GPUCanvasContext
@@ -16,6 +20,7 @@ export function WebGPUCanvas() {
     let bindGroup: GPUBindGroup
     let texture: GPUTexture
     let sampler: GPUSampler
+    let uniformBuffer: GPUBuffer
 
     async function init() {
       const gpu = await initWebGPU()
@@ -49,6 +54,11 @@ export function WebGPUCanvas() {
         minFilter: "linear",
       })
 
+      uniformBuffer = device.createBuffer({
+        size: 16,
+        usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+      })
+
       const video = videoRef.current!
       await video.play()
 
@@ -63,10 +73,20 @@ export function WebGPUCanvas() {
         entries: [
           { binding: 0, resource: texture.createView() },
           { binding: 1, resource: sampler },
+          { binding: 2, resource: { buffer: uniformBuffer } },
         ],
       })
 
       function frame() {
+        const frameData = new Float32Array([
+          brightness,
+          contrast,
+          grayscale,
+          0,
+        ])
+
+        device.queue.writeBuffer(uniformBuffer, 0, frameData)
+
         const videoFrame = new VideoFrame(video)
 
         device.queue.copyExternalImageToTexture(
@@ -105,7 +125,7 @@ export function WebGPUCanvas() {
     }
 
     init()
-  }, [])
+  }, [brightness, contrast, grayscale])
 
   return (
     <div className="flex flex-col gap-4">
@@ -118,6 +138,44 @@ export function WebGPUCanvas() {
         }}
       />
 
+      <div className="flex gap-4 text-sm">
+        <label>
+          Brightness
+          <input
+            type="range"
+            min="-0.5"
+            max="0.5"
+            step="0.01"
+            value={brightness}
+            onChange={(e) => setBrightness(+e.target.value)}
+          />
+        </label>
+
+        <label>
+          Contrast
+          <input
+            type="range"
+            min="0.5"
+            max="2.0"
+            step="0.01"
+            value={contrast}
+            onChange={(e) => setContrast(+e.target.value)}
+          />
+        </label>
+
+        <label>
+          Grayscale
+          <input
+            type="range"
+            min="0"
+            max="1"
+            step="0.01"
+            value={grayscale}
+            onChange={(e) => setGrayscale(+e.target.value)}
+          />
+        </label>
+      </div>
+
       <video ref={videoRef} muted playsInline className="hidden" />
 
       <canvas
@@ -129,4 +187,3 @@ export function WebGPUCanvas() {
     </div>
   )
 }
-
