@@ -1,6 +1,6 @@
-import { Button } from "@/components/ui/button"
 import { WebGPUTest } from "@/components/WebGPUTest"
 import { WebGPUCanvas } from "@/components/WebGPUCanvas"
+import { VideoClipper } from "@/components/VideoClipper"
 
 export default function Home() {
   return (
@@ -9,8 +9,7 @@ export default function Home() {
 
       <WebGPUTest />
       <WebGPUCanvas />
-
-      <Button disabled>Video Processing (Coming Soon)</Button>
+      <VideoClipper />
     </main>
   )
 }
